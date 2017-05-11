@@ -191,10 +191,10 @@ FORGE.Raycaster.prototype._cameraChangeHandler = function()
 FORGE.Raycaster.prototype._raycast = function(event, screenPoint)
 {
     // If there is an hovered object but not ready (maybe the texture is updating), ignore the raycast
-    if(this._hoveredObject !== null && this._hoveredObject.ready === false)
-    {
-        return;
-    }
+    // if(this._hoveredObject !== null && this._hoveredObject.ready === false)
+    // {
+    //     return;
+    // }
 
     var resolution = this._viewer.renderer.canvasResolution;
 
@@ -216,28 +216,31 @@ FORGE.Raycaster.prototype._raycast = function(event, screenPoint)
     // Get the first intersected object
     var intersected = this._intersect(objects, ndc, camera);
 
+    function checkForIntersection() {
+        if (intersected !== this._hoveredObject)
+        {
+            this._out();
+
+            this._hoveredObject = intersected;
+            intersected.over();
+
+            if (this._viewer.renderer.pickingManager.mode ===
+                FORGE.PickingManager.modes.GAZE) {
+                this._viewer.renderer.camera.gaze.start();
+            }
+        }
+    }
+
     if (intersected !== null)
     {
         if (event === "click")
         {
-            this._hoveredObject = intersected; // For mobile we have to set the last intersect as the hovered object.
+            checkForIntersection.call(this);
             this.click();
         }
         else if (event === "move")
         {
-
-            if (intersected !== this._hoveredObject)
-            {
-                this._out();
-
-                this._hoveredObject = intersected;
-                intersected.over();
-
-                if (this._viewer.renderer.pickingManager.mode === FORGE.PickingManager.modes.GAZE)
-                {
-                    this._viewer.renderer.camera.gaze.start();
-                }
-            }
+            checkForIntersection.call(this);
         }
     }
     else
@@ -321,7 +324,8 @@ FORGE.Raycaster.prototype._intersect = function(objects, ndc, camera)
             var color = this._getObjectColorFromUVCoords(object, uv);
 
             // If color is null we consider that we are hitting the object but its texture is not ready
-            if (color === null || (color != null && color.alpha > 10))
+
+            if (color !== null && color.alpha > 10)
             {
                 result = object;
             }
