@@ -150,6 +150,8 @@ FORGE.RequestAnimationFrame.prototype.stop = function()
     this._running = false;
 };
 
+var timeRef = 0;
+
 /**
  * Update the RAF.
  * @method FORGE.RequestAnimationFrame#_updateRAF
@@ -159,6 +161,13 @@ FORGE.RequestAnimationFrame.prototype.stop = function()
  */
 FORGE.RequestAnimationFrame.prototype._updateRAF = function(time)
 {
+    var diff = Math.abs(timeRef - time);
+
+    if (diff >= 30) {
+        this._viewer.update(Math.floor(time));
+        timeRef = time;
+    }
+
     this._called++;
     this._viewer.update(Math.floor(time));
     this._timeOutID = this._owner.requestAnimationFrame(this._onLoop.bind(this));
